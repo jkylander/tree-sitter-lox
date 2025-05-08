@@ -61,7 +61,9 @@ module.exports = grammar({
         $.stmt_return,
         $.stmt_while
       ),
-    stmt_block: ($) => seq("{", field("body", repeat($.decl)), "}"),
+    stmt_block: ($) => prec(0,
+      seq("{", field("body", repeat($.decl)), "}")
+    ),
     stmt_expr: ($) => seq(field("value", $._expr), ";"),
     stmt_for: ($) =>
       seq(
@@ -99,7 +101,9 @@ module.exports = grammar({
         $.expr_infix,
         $.expr_prefix,
         $.expr_primary,
-        $.expr_field
+        $.expr_field,
+        $.expr_list,
+        $.expr_map
       ),
     expr_call: ($) =>
       prec.left(
@@ -111,6 +115,18 @@ module.exports = grammar({
       '.',
       field("field", $.identifier)
     )),
+    expr_list: ($) => 
+      seq(
+        "[",
+        optional(commaSep($._expr)),
+        "]"),
+    expr_map: ($) => prec(1,
+      seq(
+        "{",
+        optional(commaSep($.pair)),
+        "}"
+      )
+    ),
     expr_infix: ($) => {
       const table = [
         [prec.left, precTable.factor, choice("*", "/")],
@@ -158,6 +174,17 @@ module.exports = grammar({
       ),
     args: ($) => seq("(", optional(commaSep($._expr)), ")"),
     params: ($) => seq("(", optional(commaSep($.identifier)), ")"),
+    pair: ($) => seq(
+      $.identifier,
+      ':',
+      $._value
+    ),
+    _value: ($) => choice(
+      $.number,
+      $.string,
+      $.bool,
+      $.nil,
+    ),
     comment: ($) => token(seq("//", /.*/)),
     // Currently, this regex allows keywords to show up as identifiers in
     // certain contexts; i.e. statements like `var nil = "foo";` are allowed.
