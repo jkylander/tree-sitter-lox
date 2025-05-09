@@ -8,13 +8,15 @@
   "for"
   "fun"
   "if"
-  "print"
   "return"
-  "super"
   "var"
   "while"
-  (this)
 ] @keyword
+[
+ "super"
+ (this)
+] @variable.builtin
+"print" @function.builtin
 
 ; Operators
 [
@@ -93,11 +95,12 @@
 
 ; Field access
 (expr_field
-  field: (identifier) @variable
+  field: (identifier) @variable.member (#set! priority 95)
 )
-(super
-  field: (identifier) @variable
-)
+[
+ (super field: (identifier))
+ (params)
+ ] @variable.parameter
 
 ; Variable
-(identifier) @variable
+((identifier) @variable (#set! priority 90))
